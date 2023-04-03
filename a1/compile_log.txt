@@ -1,4 +1,0 @@
-a1.c: In function ‘main’:
-a1.c:6:10: warning: unused variable ‘ceva’ [-Wunused-variable]
-    6 |     int *ceva = malloc(10);
-      |          ^~~~
