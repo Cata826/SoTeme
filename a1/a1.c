@@ -106,8 +106,6 @@ int main(int argc, char **argv){
                 { 
                 if(strstr(argv[3],"path="))
                 {
-                // if(strstr(argv[4],"size_greater="))
-                // {
                 // char size[10000];
                 // sscanf(argv[3],"%s",size);
                 // char *token;int number=0;
@@ -136,8 +134,11 @@ int main(int argc, char **argv){
                
                 // listRec(tok);
                 // }
+                
                 }else printf("ERROR\ninvalid directory path\n");
                 } else
+                
+                if(strstr(argv[2],"path="))
                 {
                 printf("SUCCESS\n");
                 char path[10000];
@@ -146,7 +147,9 @@ int main(int argc, char **argv){
                 tok = strtok(path, "=");
                 tok = strtok(NULL, "=");
                 listDir(tok);
-                }    
+                }
+                else printf("ERROR\ninvalid directory path\n");
+                    
           }
         }              
     return 0;
