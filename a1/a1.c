@@ -5,6 +5,49 @@
 #include <dirent.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#include <fcntl.h>
+int esteReg(const char *path)
+{
+    DIR *dir = NULL;
+    struct dirent *entry = NULL;
+    char filePath[512];
+    struct stat statbuf;
+	int ok=0;
+    dir = opendir(path);
+    if(dir == NULL) {
+        perror("Could not open directory");
+        return -1;
+    }
+    while((entry = readdir(dir)) != NULL) {
+        snprintf(filePath, 512, "%s/%s", path, entry->d_name);
+        if(lstat(filePath, &statbuf) == 0) {
+            if(S_ISREG(statbuf.st_mode)) {
+			ok=1;
+               }
+        }
+    }        
+    closedir(dir);
+    return ok;
+
+    }
+
+
+off_t getFileSize(const char* path) {
+    int fd;
+    off_t size;
+
+    fd = open(path, O_RDONLY);
+    if(fd == -1) {
+        perror("Could not open input file");
+        exit(EXIT_FAILURE);
+    }
+
+    size = lseek(fd, 0, SEEK_END);
+    //printf("The file size is %ld.\n", size);
+    close(fd);
+
+    return size;
+}
 int listRec(const char *path)
 {
     DIR *dir = NULL;
@@ -58,18 +101,20 @@ int main(int argc, char **argv){
         
         if(strcmp(argv[1], "list") == 0)
         {            
-                // if(strcmp(argv[2], "recursive")==0)
-                // {
-                //     printf("SUCCESS\n");
-                //     char path[10000];
-                //     sscanf(argv[2],"%s",path);
-                //     char *tok;
-                //     tok = strtok(path, "=");
-                //     tok = strtok(NULL, "=");
-                //     listRec(tok);                    
-                // }
-                if(strcmp(argv[2], "recursive")==0)
+            
+                if(strstr(argv[2], "recursive"))
+                { 
+                if(strstr(argv[3],"path="))
                 {
+                // if(strstr(argv[4],"size_greater="))
+                // {
+                // char size[10000];
+                // sscanf(argv[3],"%s",size);
+                // char *token;int number=0;
+                // token = strtok(size, "=");
+                // token = strtok(NULL, "=");
+                // number=atoi(token);
+                // }
                 printf("SUCCESS\n");
                 char path[10000];
                 sscanf(argv[3],"%s",path);
@@ -77,7 +122,22 @@ int main(int argc, char **argv){
                 tok = strtok(path, "=");
                 tok = strtok(NULL, "=");
                 listRec(tok);
-                } else //if(strcmp(argv[2], "simple")==0)
+                //  if(strstr(argv[4],"size_greater="))
+                //  {
+                // printf("SUCCESS\n");
+                // char path[10000];
+                // sscanf(argv[3],"%s",path);
+                // char *tok;
+                // tok = strtok(path, "=");
+                // tok = strtok(NULL, "=");
+                // //esteReg(tok);
+               // listRec(tok);
+                // }
+               
+                // listRec(tok);
+                // }
+                }else printf("ERROR\ninvalid directory path\n");
+                } else
                 {
                 printf("SUCCESS\n");
                 char path[10000];
@@ -86,11 +146,8 @@ int main(int argc, char **argv){
                 tok = strtok(path, "=");
                 tok = strtok(NULL, "=");
                 listDir(tok);
-                }
-               
-        }  
-            
-        }    
-           
+                }    
+          }
+        }              
     return 0;
 }
