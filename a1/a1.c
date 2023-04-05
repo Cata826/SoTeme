@@ -56,7 +56,7 @@ int perm_string_to_octal(const char *perm_str)
 
     return octal;
 }
-int listPerm(const char *path, const char perm[])
+int listPerm(const char *path, const char perm[],int recursive)
 {
     DIR *dir = opendir(path);
     if (dir == NULL)
@@ -81,6 +81,7 @@ int listPerm(const char *path, const char perm[])
                 if (permissions == (statbuf.st_mode & 0777))
                 {
                     printf("%s\n", fullPath);
+                    if(recursive==1) listPerm(fullPath,perm,recursive);
                 }
             }
         }
@@ -223,7 +224,7 @@ int main(int argc, char **argv)
             {
                 if (permision == 1)
                 {
-                    listPerm(path, perm);
+                    listPerm(path, perm,recursive);
                 }
                 else
                 {
