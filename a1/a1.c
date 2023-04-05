@@ -33,23 +33,21 @@ int perm_string_to_octal(const char *perm_str)
         switch (perm_str[i])
         {
         case 'r':
-            octal |= 4; // OR with 100 to set read bit to 1
+            octal |= 4; 
             break;
         case 'w':
-            octal |= 2; // OR with 010 to set write bit to 1
+            octal |= 2; 
             break;
         case 'x':
-            octal |= 1; // OR with 001 to set execute bit to 1
+            octal |= 1; 
             break;
         case '-':
         default:
-            // do nothing
             break;
         }
 
         if ((i + 1) % 3 == 0)
         {
-            // add digit to octal string every 3 characters
             octal <<= 3;
         }
     }
