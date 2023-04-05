@@ -177,51 +177,66 @@ int listSize(const char *path, int size, int recursive)
     closedir(dir);
     return 0;
 }
-// int parse(const char *path)
-// {
-//     printf("SUCCESS\n");
-//         int fd ;
-//     fd = open(path, O_RDONLY);
-//     lseek(fd, -1 ,SEEK_END);
-//     char magic;
-//     read(fd, &magic, 1);
-//     printf("%c\n",magic);
-//     lseek(fd, -3,SEEK_END );
-//     short int head;
-//     read(fd, &head, 2);
-//     printf("%d\n",head);
-//     lseek(fd,0, SEEK_END);
-//     lseek(fd,-head, SEEK_END);
-//     char buffer[256];
-//     read(fd, buffer, sizeof(buffer));
-//     printf("version=%d\n",buffer[0]);
-//     printf("nr_section=%d\n",buffer[4]);
-//     //printf("name=%d\n",buffer[5]);
-//     int no_of_section=buffer[4];
-//     int version=buffer[0];
-//     int sect_type=0;
-//     if(magic!='u') printf("ERROR\nwrong magic");
-//     if(no_of_section<6 || no_of_section>16) printf("ERROR\nsect_nr");
-//     if(version<26 || version>110) printf("ERROR\nversion");
-//     if(sect_type!=98 && sect_type!=96 && sect_type!=50) printf("ERROR\nsect_types");
-// //    for(int i=5;i<256;i++)
-// //    {
-// //     sect_name
-// //    }  
-//     // for(int i=0;i<256;i++)
+int parse(const char *path)
+{
+        int fd ;
+    fd = open(path, O_RDONLY);
+    lseek(fd, -1 ,SEEK_END);
+    char magic;
+    read(fd, &magic, 1);
+    //printf("%c\n",magic);
+     if(magic!='u') {
+        printf("ERROR\nwrong magic");
+        return -1;
+     }
+     
+    lseek(fd, -3,SEEK_END );
+    short int head;
+    read(fd, &head, 2);
+    //printf("%d\n",head);
+    lseek(fd,0, SEEK_END);
+    lseek(fd,-head, SEEK_END);
+    char buffer[256];
+    read(fd, buffer, sizeof(buffer));
+    int no_of_section=buffer[4];
+    // printf("nr_section=%d\n",buffer[4]);
+    if(no_of_section<6 || no_of_section>16) {
+      printf("ERROR\nwrong sect_nr\n");
+      return -1;
+    }
+      int version=buffer[0];
+     if(version<26 || version>110) 
+     {
+        printf("ERROR\nwrong version\n");
+        return -1;
+     }
+    printf("SUCCESS\n");
+    printf("version=%d\n",buffer[0]);
+    printf("nr_section=%d\n",buffer[4]);
+    printf("name=%d\n",buffer[5]);
+    
+  
+    int sect_type=0;
    
-//     for(int j=0;j<buffer[4];j++)
-//     {
-//         printf("section%d: \n",j);
+    if(sect_type!=98 && sect_type!=96 && sect_type!=50) printf("ERROR\nsect_types");
+//    for(int i=5;i<256;i++)
+//    {
+//     sect_name
+//    }  
+    // for(int i=0;i<256;i++)
+   
+    for(int j=0;j<buffer[4];j++)
+    {
+        printf("section%d: \n",j);
         
-//     }
-//      for(int i=0;i<256;i++)
-//           printf("%d ",buffer[i]);
+    }
+     for(int i=0;i<256;i++)
+          printf("%d ",buffer[i]);
         
 
-//     close(fd);
-//     return 0;
-// }
+    close(fd);
+    return 0;
+}
 int main(int argc, char **argv)
 {
     char path[10000];
@@ -284,7 +299,7 @@ int main(int argc, char **argv)
         } else if (strcmp(argv[1], "parse") == 0)
         {
             
-           // parse(argv[2]+5);
+            parse(argv[2]+5);
         }
     }
     return 0;
