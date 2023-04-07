@@ -205,12 +205,39 @@ int parse(const char *path)
         printf("ERROR\nwrong version\n");
         return -1;
     }
+    
+
     int k = 0;
-    printf("SUCCESS\n");
-        printf("version=%d\n",version);
-    printf("nr_sections=%d\n",no_of_section);
+    
     char section[29];
     
+
+     while(k < no_of_section)
+    {
+        char sect_name[18];
+        int sect_type, sect_offset, sect_size;
+        read(fd,section,29);
+        memcpy(sect_name, section, 17);
+        sect_name[17] = '\0';
+        memcpy(&sect_type, section+17, 4);
+        memcpy(&sect_offset, section+21, 4);
+        memcpy(&sect_size, section+25, 4);
+        section[29]='\0';
+         if (sect_type!=98 && sect_type!=96 && sect_type!=50) {
+            printf("ERROR\nwrong sect_types\n");
+            
+            return -1;
+        }
+
+       // printf("section%d: %s %d %d\n",k+1,sect_name,sect_type,sect_size);          
+        k++;
+    }
+    lseek(fd,-29*no_of_section,SEEK_CUR);
+    k=0;
+      printf("SUCCESS\n");
+      printf("version=%d\n",version);
+      printf("nr_sections=%d\n",no_of_section);
+    //   k=0;
     while(k < no_of_section)
     {
         char sect_name[18];
@@ -222,13 +249,16 @@ int parse(const char *path)
         memcpy(&sect_offset, section+21, 4);
         memcpy(&sect_size, section+25, 4);
         section[29]='\0';
-        printf("section%d: %s %d %d\n",k+1,sect_name,sect_type,sect_size);
+        
+         if (sect_type!=98 && sect_type!=96 && sect_type!=50) {
+         
+            return -1;
+        }
+
+         printf("section%d: %s %d %d\n",k+1,sect_name,sect_type,sect_size);          
         k++;
-
-       
-
     }
-    
+   
     close(fd);
     return 0;
 }
