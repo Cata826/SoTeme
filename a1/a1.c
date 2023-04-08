@@ -89,6 +89,7 @@ int listPerm(const char *path, const char perm[],int recursive)
     return 1;
 }
 
+
 int listRec(const char *path)
 {
     DIR *dir = NULL;
@@ -112,6 +113,7 @@ int listRec(const char *path)
                 printf("%s\n", fullPath);
                 if (S_ISDIR(statbuf.st_mode))
                 {
+
                     listRec(fullPath);
                 }
             }
@@ -205,13 +207,9 @@ int parse(const char *path)
         printf("ERROR\nwrong version\n");
         return -1;
     }
-    
 
-    int k = 0;
-    
+    int k = 0;    
     char section[29];
-    
-
      while(k < no_of_section)
     {
         char sect_name[18];
@@ -237,7 +235,6 @@ int parse(const char *path)
       printf("SUCCESS\n");
       printf("version=%d\n",version);
       printf("nr_sections=%d\n",no_of_section);
-    //   k=0;
     while(k < no_of_section)
     {
         char sect_name[18];
@@ -250,10 +247,10 @@ int parse(const char *path)
         memcpy(&sect_size, section+25, 4);
         section[29]='\0';
         
-         if (sect_type!=98 && sect_type!=96 && sect_type!=50) {
+        //  if (sect_type!=98 && sect_type!=96 && sect_type!=50) {
          
-            return -1;
-        }
+        //     return -1;
+        // }
 
          printf("section%d: %s %d %d\n",k+1,sect_name,sect_type,sect_size);          
         k++;
@@ -261,6 +258,95 @@ int parse(const char *path)
    
     close(fd);
     return 0;
+}
+
+int valid2(const char *path)
+{
+    int fd;
+    fd = open(path, O_RDONLY);
+    lseek(fd, -1 ,SEEK_END);
+    char magic;
+    read(fd, &magic, 1);
+    if(magic!='u') {
+         return -1;
+    }
+    lseek(fd, -3, SEEK_END);
+    short int head;
+    read(fd, &head, 2);
+    lseek(fd,0, SEEK_END);
+    lseek(fd,-head, SEEK_END);
+    char buffer[5];
+    read(fd, buffer, sizeof(buffer));
+    int no_of_section = buffer[4];
+    if(no_of_section<6 || no_of_section>16) {
+         return -1;
+    }
+    int version = buffer[0];
+    if(version<26 || version>110) {
+         return -1;
+    }
+    int k = 0;    int c=0;
+    char section[29];
+     while(k < no_of_section)
+    {
+        char sect_name[18];
+        int sect_type, sect_offset, sect_size;
+        read(fd,section,29);
+        memcpy(sect_name, section, 17);
+        sect_name[17] = '\0';
+        memcpy(&sect_type, section+17, 4);
+        memcpy(&sect_offset, section+21, 4);
+        memcpy(&sect_size, section+25, 4);
+        section[29]='\0';
+         if (sect_type!=98 && sect_type!=96 && sect_type!=50) {
+            return -1;
+            //return 0;
+        }       
+        if(sect_type==98) c++;
+        k++;
+    }
+    if(c<3) return -1;
+    
+
+    close(fd);
+    return 0;
+}
+void listRec1(const char *path)
+{
+    DIR *dir = NULL;
+    struct dirent *entry = NULL;
+    char fullPath[2048];
+    struct stat statbuf;
+
+    dir = opendir(path);
+    if (dir == NULL)
+    {
+        perror("Could not open directory");
+        //return 0;
+    }
+    int a;
+    while ((entry = readdir(dir)) != NULL)
+    {
+        if (strcmp(entry->d_name, ".") != 0 && strcmp(entry->d_name, "..") != 0)
+        {
+            snprintf(fullPath, 2048, "%s/%s", path, entry->d_name);
+            if (lstat(fullPath, &statbuf) == 0)
+            {
+               
+                if (S_ISDIR(statbuf.st_mode) )
+                {   
+                    listRec1(fullPath);
+                }
+                else{
+                    a=valid2(fullPath);
+                    if( a==0)
+                         printf("%s\n", fullPath);
+                }
+              
+            }
+        }
+    }
+    closedir(dir);
 }
 
 int main(int argc, char **argv)
@@ -327,6 +413,12 @@ int main(int argc, char **argv)
             
             parse(argv[2]+5);
         }
+         else if (strcmp(argv[1], "findall") == 0)
+         {
+             printf("SUCCESS\n");
+          
+             listRec1(argv[2]+5);
+         }
     }
     return 0;
 }
