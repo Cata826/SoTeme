@@ -3,7 +3,24 @@
 #include <sys/wait.h>
 #include <unistd.h>
 #include "a2_helper.h"
+#include <pthread.h>
+void *thread_function(void* arg)
+{
+    int thread_num = *((int*) arg);
+    // if(thread_num==1)
+    // { 
+    //     info(BEGIN, 2, 3);
+    //     info(BEGIN, 2, thread_num);
+    // }
+    // else
+    info(BEGIN, 2, thread_num);
+    
+    
+    
+    
 
+    return NULL;
+}
 int main(void)
 {
     init();
@@ -19,9 +36,32 @@ int main(void)
     else if (pid2 == 0)
     {
         info(BEGIN, 2, 0);
+      // create threads
+        pthread_t threads[4];
+        int thread_args[4]={1,2,3,4};
+
+        for (int i = 0; i < 4; i++)
+        {
+            thread_args[i] = i + 1;
+            pthread_create(&threads[i], NULL, thread_function, &thread_args[i]);
+        }
+        //info(BEGIN,2,1);
+        // wait for threads to finish
+        for (int i = 0; i < 4; i++)
+        {
+            pthread_join(threads[i], NULL);
+        }
+     
         // printf("[CHILD 2] My PID is %d. My parent's PID is %d.\n", getpid(), getppid());
+        info(END, 2, 1);
+        info(END, 2, 3);
+        info(END, 2, 2);
+        info(END, 2, 4);
+        
         info(END, 2, 0);
+        // free(thread_args);
         return 0;
+       
     }
 
     pid3 = fork();
@@ -46,7 +86,7 @@ int main(void)
             info(END, 7, 0);
             return 0;
         }
- waitpid(pid7, NULL, 0);
+         waitpid(pid7, NULL, 0);
          waitpid(pid3, NULL, 0);
         info(END, 3, 0);
        
