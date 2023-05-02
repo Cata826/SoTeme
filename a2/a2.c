@@ -20,20 +20,22 @@ void *thread_function(void *arg)
 
     return NULL;
 }
+void *thread_function8(void *arg)
+{
+    int thread_num = *((int *)arg);
+
+    info(BEGIN, 8, thread_num);
+    info(END,8,thread_num);
+
+    return NULL;
+}
 void *thread_function6(void *arg)
 {
     int thread_num = *((int *)arg);
-    // if(thread_num==1)
-    // {
-    //     info(BEGIN, 2, 3);
-    //     info(BEGIN, 2, thread_num);
-    // }
-    // else
     sem_wait(&sem);
     info(BEGIN, 6, thread_num);
     info(END, 6, thread_num);
-      sem_post(&sem); 
-        
+      sem_post(&sem);     
 
     return NULL;
 }
@@ -132,6 +134,26 @@ int main(void)
         else if (pid8 == 0)
         {
             info(BEGIN, 8, 0);
+              pthread_t threads2[4];
+        int thread_args2[4];
+
+        for (int i = 0; i < 4; i++)
+        {
+            thread_args2[i] = i + 1;
+            pthread_create(&threads2[i], NULL, thread_function8, &thread_args2[i]);
+        }
+        // info(BEGIN,2,1);
+        //  wait for threads to finish
+        for (int i = 0; i < 4; i++)
+        {
+            pthread_join(threads2[i], NULL);
+        }
+        // printf("[CHILD 2] My PID is %d. My parent's PID is %d.\n", getpid(), getppid());
+        // for (int i = 0; i < 4; i++)
+        // {
+        //     info(END, 2, i + 1);
+        // }
+
             // printf("[GRANDCHILD 8] My PID is %d. My parent's PID is %d.\n", getpid(), getppid());
             info(END, 8, 0);
             return 0;
