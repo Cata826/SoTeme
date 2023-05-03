@@ -7,14 +7,17 @@
 #include <pthread.h>
 #include <semaphore.h>
 int ok=0;
-int ok8=0;
 pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
-pthread_mutex_t lock1 = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t lock2 = PTHREAD_MUTEX_INITIALIZER;
 pthread_cond_t cond = PTHREAD_COND_INITIALIZER;
 pthread_cond_t cond1 = PTHREAD_COND_INITIALIZER;
+pthread_cond_t cond2 = PTHREAD_COND_INITIALIZER;
+int num_threads_finished = 0;
+
 sem_t sem;
 sem_t *semaphore;
 sem_t *semaphore2;
+pthread_barrier_t barrier;
 void *thread_function(void *arg)
 {
     int thread_num = *((int *)arg);
@@ -78,7 +81,6 @@ void *thread_function8(void *arg)
       
         info(END, 8, thread_num);
           sem_post(semaphore); 
-        ok8=1;
      }
      else 
      info(END, 8, thread_num);
@@ -87,9 +89,15 @@ void *thread_function8(void *arg)
 void *thread_function6(void *arg)
 {
     int thread_num = *((int *)arg);
+ 
     sem_wait(&sem);
     info(BEGIN, 6, thread_num);
-
+    // if(thread_num==11)
+    // {
+    //  //    pthread_barrier_wait(&barrier);
+    //       info(END, 6, thread_num);
+    // }
+    // else
     info(END, 6, thread_num);
     sem_post(&sem);
    
@@ -101,13 +109,14 @@ int main(void)
     init();
     info(BEGIN, 1, 0);
     semaphore = sem_open("/my_semaphore", O_CREAT, 0644, 0);
-     semaphore2 = sem_open("/my_semaphore2", O_CREAT, 0644, 0);
+    semaphore2 = sem_open("/my_semaphore2", O_CREAT, 0644, 0);
     pthread_mutex_init(&lock, NULL);
-    pthread_mutex_init(&lock1, NULL);
+    pthread_mutex_init(&lock2, NULL);
     pthread_cond_init(&cond, NULL);
     pthread_cond_init(&cond1,NULL);
+    pthread_cond_init(&cond2,NULL);
     pid_t pid2, pid3, pid4, pid5, pid6, pid7, pid8, pid9;
-    
+   //  pthread_barrier_init(&barrier, NULL, 4);
 
     pid2 = fork();
     if (pid2 == -1)
@@ -231,6 +240,7 @@ int main(void)
     else if (pid6 == 0)
     {
         sem_init(&sem, 0, 4);
+
         info(BEGIN, 6, 0);
         pthread_t threads1[50];
         int thread_args1[50];
@@ -249,9 +259,11 @@ int main(void)
         // info(END, 6, 11);
         info(END, 6, 0);
         sem_destroy(&sem);
+      //  pthread_barrier_destroy(&barrier);
+     
         return 0;
     }
-
+     
     pid9 = fork();
     if (pid9 == -1)
     {
