@@ -5,19 +5,52 @@
 #include "a2_helper.h"
 #include <pthread.h>
 #include <semaphore.h>
-
-sem_t sem; 
+int ok=0;
+pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t lock1 = PTHREAD_MUTEX_INITIALIZER;
+pthread_cond_t cond = PTHREAD_COND_INITIALIZER;
+pthread_cond_t cond1 = PTHREAD_COND_INITIALIZER;
+sem_t sem;
 void *thread_function(void *arg)
 {
     int thread_num = *((int *)arg);
-    // if(thread_num==1)
-    // {
-    //     info(BEGIN, 2, 3);
-    //     info(BEGIN, 2, thread_num);
-    // }
-    // else
-    info(BEGIN, 2, thread_num);
-
+    pthread_mutex_lock(&lock);
+    if(thread_num==1)
+    {
+        if(ok==1)
+            info(BEGIN,2,thread_num);
+        else
+        {
+            pthread_cond_wait(&cond,&lock);
+            info(BEGIN, 2, thread_num);
+        }
+    }
+    else if(thread_num==2||thread_num==4)
+    {
+            info(BEGIN, 2, thread_num);
+    }
+    else if(thread_num==3)
+    {
+            info(BEGIN, 2, thread_num);
+            pthread_cond_signal(&cond);
+            ok=1;
+    }
+    if(thread_num==3)
+    {
+        pthread_cond_wait(&cond1,&lock);
+        info(END, 2, thread_num);
+    }
+    else if(thread_num==2||thread_num==4)
+    {
+          info(END, 2, thread_num);
+    }
+    else if(thread_num==1)
+    { 
+        info(END, 2, thread_num);
+        pthread_cond_signal(&cond1);
+    }
+        
+    pthread_mutex_unlock(&lock);
     return NULL;
 }
 void *thread_function8(void *arg)
@@ -25,7 +58,7 @@ void *thread_function8(void *arg)
     int thread_num = *((int *)arg);
 
     info(BEGIN, 8, thread_num);
-    info(END,8,thread_num);
+    info(END, 8, thread_num);
 
     return NULL;
 }
@@ -34,9 +67,11 @@ void *thread_function6(void *arg)
     int thread_num = *((int *)arg);
     sem_wait(&sem);
     info(BEGIN, 6, thread_num);
-    info(END, 6, thread_num);
-      sem_post(&sem);     
 
+    info(END, 6, thread_num);
+    sem_post(&sem);
+   
+    
     return NULL;
 }
 int main(void)
@@ -44,6 +79,10 @@ int main(void)
     init();
     info(BEGIN, 1, 0);
 
+    pthread_mutex_init(&lock, NULL);
+    pthread_mutex_init(&lock1, NULL);
+    pthread_cond_init(&cond, NULL);
+    pthread_cond_init(&cond1,NULL);
     pid_t pid2, pid3, pid4, pid5, pid6, pid7, pid8, pid9;
 
     pid2 = fork();
@@ -54,36 +93,20 @@ int main(void)
     else if (pid2 == 0)
     {
         info(BEGIN, 2, 0);
-        
-        // create threads
         pthread_t threads[4];
         int thread_args[4];
 
-        for (int i = 2; i < 4; i++)
+        for (int i = 0; i < 4; i++)
         {
             thread_args[i] = i + 1;
             pthread_create(&threads[i], NULL, thread_function, &thread_args[i]);
         }
-        for (int i = 0; i<= 1; i++)
-        {
-            thread_args[i] = i + 1;
-            pthread_create(&threads[i], NULL, thread_function, &thread_args[i]);
-        }
-
-        // info(BEGIN,2,1);
-        //  wait for threads to finish
         for (int i = 0; i < 4; i++)
         {
             pthread_join(threads[i], NULL);
         }
-        // printf("[CHILD 2] My PID is %d. My parent's PID is %d.\n", getpid(), getppid());
-        for (int i = 0; i < 4; i++)
-        {
-            info(END, 2, i + 1);
-        }
 
         info(END, 2, 0);
-        // free(thread_args);
         return 0;
     }
 
@@ -134,26 +157,24 @@ int main(void)
         else if (pid8 == 0)
         {
             info(BEGIN, 8, 0);
-              pthread_t threads2[4];
-        int thread_args2[4];
+            pthread_t threads2[4];
+            int thread_args2[4];
 
-        for (int i = 0; i < 4; i++)
-        {
-            thread_args2[i] = i + 1;
-            pthread_create(&threads2[i], NULL, thread_function8, &thread_args2[i]);
-        }
-        // info(BEGIN,2,1);
-        //  wait for threads to finish
-        for (int i = 0; i < 4; i++)
-        {
-            pthread_join(threads2[i], NULL);
-        }
-        // printf("[CHILD 2] My PID is %d. My parent's PID is %d.\n", getpid(), getppid());
-        // for (int i = 0; i < 4; i++)
-        // {
-        //     info(END, 2, i + 1);
-        // }
+            for (int i = 0; i < 4; i++)
+            {
+                thread_args2[i] = i + 1;
+                pthread_create(&threads2[i], NULL, thread_function8, &thread_args2[i]);
+            }
+            for (int i = 0; i < 4; i++)
+            {
+                pthread_join(threads2[i], NULL);
+            }
+            // printf("[CHILD 2] My PID is %d. My parent's PID is %d.\n", getpid(), getppid());
 
+            // for (int i = 0; i < 4; i++)
+            // {
+            //     info(END, 2, i + 1);
+            // }
             // printf("[GRANDCHILD 8] My PID is %d. My parent's PID is %d.\n", getpid(), getppid());
             info(END, 8, 0);
             return 0;
@@ -188,21 +209,21 @@ int main(void)
     {
         sem_init(&sem, 0, 4);
         info(BEGIN, 6, 0);
-         pthread_t threads1[50];
-    int thread_args1[50];
-    for (int i = 0; i < 50; i++)
-    {
-        thread_args1[i] = i + 1;
-        pthread_create(&threads1[i], NULL, thread_function6, &thread_args1[i]);
-       
-    }
+        pthread_t threads1[50];
+        int thread_args1[50];
+        for (int i = 0; i < 50; i++)
+        {
+            thread_args1[i] = i + 1;
+            pthread_create(&threads1[i], NULL, thread_function6, &thread_args1[i]);
+        }
 
-    for (int i = 0; i < 50; i++)
-    {
-        pthread_join(threads1[i], NULL);
-    }
-      
-        // printf("[CHILD 6] My PID is %d. My parent's PID is %d.\n", getpid(), getppid());
+        for (int i = 0; i < 50; i++)
+        {
+            pthread_join(threads1[i], NULL);
+        }
+
+        // printf("[CHILD 6] My PID is %d. My parent's PID is %d.\n", getpid(), getppid())
+        // info(END, 6, 11);
         info(END, 6, 0);
         sem_destroy(&sem);
         return 0;
