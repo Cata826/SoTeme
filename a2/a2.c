@@ -50,6 +50,7 @@ void *thread_function(void *arg)
     {
           info(END, 2, thread_num);
           sem_post(semaphore2);
+         
     }
     else if(thread_num==1)
     { 
@@ -67,15 +68,17 @@ void *thread_function8(void *arg)
 {
     int thread_num = *((int *)arg);
     if(thread_num==1)
-    {   
+    {  
         sem_wait(semaphore2);
         info(BEGIN, 8, thread_num);
     }
     else
         info(BEGIN, 8, thread_num);
-     if (thread_num == 4) {
-        sem_post(semaphore); 
+    if (thread_num == 4) {
+      
         info(END, 8, thread_num);
+          sem_post(semaphore); 
+        ok8=1;
      }
      else 
      info(END, 8, thread_num);
