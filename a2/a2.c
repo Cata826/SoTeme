@@ -6,18 +6,21 @@
 #include "a2_helper.h"
 #include <pthread.h>
 #include <semaphore.h>
+
+int running_threads=0;
 int ok=0;
+int k1=0;
+int k2=0;
 pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t lock2 = PTHREAD_MUTEX_INITIALIZER;
 pthread_cond_t cond = PTHREAD_COND_INITIALIZER;
 pthread_cond_t cond1 = PTHREAD_COND_INITIALIZER;
 pthread_cond_t cond2 = PTHREAD_COND_INITIALIZER;
-int num_threads_finished = 0;
 
 sem_t sem;
 sem_t *semaphore;
 sem_t *semaphore2;
-pthread_barrier_t barrier;
+
 void *thread_function(void *arg)
 {
     int thread_num = *((int *)arg);
@@ -86,24 +89,32 @@ void *thread_function8(void *arg)
      info(END, 8, thread_num);
     return NULL;
 }
+
+
 void *thread_function6(void *arg)
 {
     int thread_num = *((int *)arg);
- 
     sem_wait(&sem);
+    running_threads++;
+
     info(BEGIN, 6, thread_num);
-    // if(thread_num==11)
-    // {
-    //  //    pthread_barrier_wait(&barrier);
-    //       info(END, 6, thread_num);
-    // }
-    // else
     info(END, 6, thread_num);
+  
     sem_post(&sem);
-   
-    
+
     return NULL;
 }
+// void *thread_function6(void *arg)
+// {
+//     int thread_num = *((int *)arg);
+//     sem_wait(&sem);
+//     info(BEGIN, 6, thread_num);
+
+//     info(END, 6, thread_num);
+//     sem_post(&sem);
+ 
+//     return NULL;
+// }
 int main(void)
 {
     init();
@@ -116,8 +127,7 @@ int main(void)
     pthread_cond_init(&cond1,NULL);
     pthread_cond_init(&cond2,NULL);
     pid_t pid2, pid3, pid4, pid5, pid6, pid7, pid8, pid9;
-   //  pthread_barrier_init(&barrier, NULL, 4);
-
+  
     pid2 = fork();
     if (pid2 == -1)
     {
@@ -240,7 +250,7 @@ int main(void)
     else if (pid6 == 0)
     {
         sem_init(&sem, 0, 4);
-
+        
         info(BEGIN, 6, 0);
         pthread_t threads1[50];
         int thread_args1[50];
@@ -252,6 +262,7 @@ int main(void)
 
         for (int i = 0; i < 50; i++)
         {
+
             pthread_join(threads1[i], NULL);
         }
 
